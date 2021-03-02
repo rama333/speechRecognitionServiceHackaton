@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="9416daa0-ca4e-4a06-a38f-ec2941db5981" name="speech" url="http://192.168.114.145">
+        <fileTransfer rootFolder="/home/ubuntu/speech" accessType="SFTP" host="192.168.114.145" port="22" sshConfigId="b4a8ff86-1b87-43bd-95e3-d4c2b8a688ed" sshConfig="ubuntu@192.168.114.145:22 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
