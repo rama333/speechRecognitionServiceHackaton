@@ -3,6 +3,7 @@ package main
 //TODO while everything is in one place, later I will make architecture
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -10,11 +11,12 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 	"net"
-	"speechRecognitionService/decoder"
 	"net/http"
 	"path/filepath"
+	"speechRecognitionService/decoder"
 	"speechRecognitionService/kaldi_go"
 	pb "speechRecognitionService/proto"
+	"strings"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -40,6 +42,83 @@ func (s server) Do(c context.Context, request *pb.Request) (*pb.Response, error)
 	res := &pb.Response{Message: "ok"}
 
 	return res,nil
+}
+
+
+const sampleRate = 44100
+const seconds = 2
+
+func maint()  {
+
+
+	fmt.Println("Launching server...")
+
+	// Устанавливаем прослушивание порта
+	ln, _ := net.Listen("tcp", ":8081")
+
+	// Открываем порт
+	conn, _ := ln.Accept()
+
+	// Запускаем цикл
+	for {
+		// Будем прослушивать все сообщения разделенные \n
+		message, _ := bufio.NewReader(conn).ReadString('\n')
+		// Распечатываем полученое сообщение
+		fmt.Print("Message Received:", string(message))
+		// Процесс выборки для полученной строки
+		newmessage := strings.ToUpper(message)
+		// Отправить новую строку обратно клиенту
+		conn.Write([]byte(newmessage + "\n"))
+	}
+
+	//portaudio.Initialize()
+	//defer portaudio.Terminate()
+	//buffer := make([]float32, sampleRate * seconds)
+	//stream, err := portaudio.OpenDefaultStream(1, 0, sampleRate, len(buffer), func(in []float32) {
+	//	for i := range buffer {
+	//		buffer[i] = in[i]
+	//		logrus.Info(in[i])
+	//	}
+	//})
+	//chk(err)
+	//chk(stream.Start())
+	//defer stream.Close()
+
+	//go func() {
+	//
+	//	for {
+	//		logrus.Info(buffer)
+	//	}
+	//}()
+
+	http.HandleFunc("/audio", func(w http.ResponseWriter, r *http.Request) {
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			panic("expected http.ResponseWriter to be an http.Flusher")
+		}
+
+		w.Header().Set("Connection", "Keep-Alive")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Transfer-Encoding", "chunked")
+		w.Header().Set("Content-Type", "audio/wave")
+		for true {
+			//binary.Write(w, binary.BigEndian, )//&buffer)
+			//logrus.Info(buffer)
+			flusher.Flush() // Trigger "chunked" encoding and send a chunk...
+			return
+		}
+	})
+
+	logrus.Info("start")
+
+	http.ListenAndServe(":8080", nil)
+}
+
+func chk(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func main()  {
@@ -82,8 +161,8 @@ func main()  {
 	router.MaxMultipartMemory = 8 << 20 // 8 MiB
 
 	router.Use(CORSMiddleware())
-	router.LoadHTMLGlob("./public/*")
-	router.Static("/assets", "./assets")
+	router.LoadHTMLGlob("../../public/*")
+	router.Static("/assets", "../../assets")
 
 	router.GET("/", func(c *gin.Context) {
 
