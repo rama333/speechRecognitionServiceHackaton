@@ -68,6 +68,7 @@ func (e *Encoder) Recognition(file string) (string, error)  {
 		"--frame-subsampling-factor="+ strconv.Itoa(e.config.FrameSubsamplingFactor),
 		"--acoustic-scale=" + fmt.Sprintf("%.1f", e.config.AcousticScale),
 		"--beam=" + fmt.Sprintf("%.1f", e.config.Beam),
+		"--minimize=" + "true",
 		"--lattice-beam=" + fmt.Sprintf("%.1f", e.config.LatticeBeam),
 		"--max-active=" + strconv.Itoa(e.config.MaxActive),
 		"--config=" + e.config.ConfigPathOnline,
@@ -75,7 +76,7 @@ func (e *Encoder) Recognition(file string) (string, error)  {
 		"" + e.config.ConfigPathFinal,
 		"" + e.config.ConfigPathHCLG,
 		"ark:echo utterance-id1 utterance-id1|",
-		"scp:echo utterance-id1 /home/ubuntu/speech/"+ file+"|",
+		"scp:echo utterance-id1 "+ file+"|",
 		"ark:- --acoustic-scale=0.1",
 	}
 

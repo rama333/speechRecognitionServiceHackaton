@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9b9a412b-b28f-41a5-ba27-64a881f72cb7" name="Default Changelist" comment="" />
+    <list default="true" id="9b9a412b-b28f-41a5-ba27-64a881f72cb7" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/bolt/db_storage.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/entity/entity.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/processing/processing.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmd/speech/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/cmd/speech/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/kaldi_go/kaldi-go.go" beforeDir="false" afterPath="$PROJECT_DIR$/kaldi_go/kaldi-go.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -40,9 +49,12 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/cmd/speech" />
+    </key>
   </component>
   <component name="RunManager">
-    <configuration name="go build speechRecognitionService" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true" nameIsGenerated="true">
+    <configuration name="go build speechRecognitionService" type="GoApplicationRunConfiguration" factoryName="Go Application" temporary="true">
       <module name="speechRecognitionService" />
       <working_directory value="$PROJECT_DIR$" />
       <kind value="PACKAGE" />

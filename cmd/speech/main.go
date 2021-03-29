@@ -8,13 +8,10 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 	"net"
 	"net/http"
-	"path/filepath"
-	"speechRecognitionService/decoder"
 	"speechRecognitionService/kaldi_go"
+	"speechRecognitionService/processing"
 	pb "speechRecognitionService/proto"
 	"strings"
 )
@@ -124,23 +121,23 @@ func chk(err error) {
 func main()  {
 
 
-	go func() {
-		listener, err := net.Listen("tcp", ":5300")
-
-		if err != nil{
-			grpclog.Fatal("fatal %v", err)
-		}
-
-
-		opts := []grpc.ServerOption{}
-
-		grpcServer := grpc.NewServer(opts...)
-
-		pb.RegisterReverseServer(grpcServer, &server{})
-
-		grpcServer.Serve(listener)
-
-	}()
+	//go func() {
+	//	listener, err := net.Listen("tcp", ":5300")
+	//
+	//	if err != nil{
+	//		grpclog.Fatal("fatal %v", err)
+	//	}
+	//
+	//
+	//	opts := []grpc.ServerOption{}
+	//
+	//	grpcServer := grpc.NewServer(opts...)
+	//
+	//	pb.RegisterReverseServer(grpcServer, &server{})
+	//
+	//	grpcServer.Serve(listener)
+	//
+	//}()
 
 	kaldi := kaldi_go.NewConfig(&kaldi_go.Config{
 		"/home/ubuntu/kaldi/src/online2bin/online2-wav-nnet3-latgen-faster",
@@ -156,66 +153,78 @@ func main()  {
 		"/home/ubuntu/test/kaldi-ru-0.9/exp/tdnn/graph/HCLG.fst",
 	})
 
-	router := gin.Default()
 
-	router.MaxMultipartMemory = 8 << 20 // 8 MiB
+	proc, err := processing.New(kaldi)
 
-	router.Use(CORSMiddleware())
-	router.LoadHTMLGlob("../../public/*")
-	router.Static("/assets", "../../assets")
+	if err != nil{
+		logrus.Panic(err)
+	}
 
-	router.GET("/", func(c *gin.Context) {
+	proc.Processing()
 
-		c.HTML(
-			http.StatusOK,
-			"index.html",
-			gin.H{
-				"title": "Home Page",
-			})
-	})
+	//router := gin.Default()
+	//
+	//router.MaxMultipartMemory = 8 << 20 // 8 MiB
+	//
+	//router.Use(CORSMiddleware())
+	//router.LoadHTMLGlob("../../public/*")
+	//router.Static("/assets", "../../assets")
+	//
+	//router.GET("/", func(c *gin.Context) {
+	//
+	//	c.HTML(
+	//		http.StatusOK,
+	//		"index.html",
+	//		gin.H{
+	//			"title": "Home Page",
+	//		})
+	//})
+	//
+	//router.POST("/upload", func(c *gin.Context) {
+	//
+	//	file, err := c.FormFile("voice")
+	//
+	//	logrus.Println(file.Filename)
+	//	logrus.Println(file.Header)
+	//	logrus.Println(file.Size)
+	//
+	//	if err != nil {
+	//		c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
+	//		return
+	//	}
+	//
+	//	filename := filepath.Base(file.Filename)
+	//	if err := c.SaveUploadedFile(file, filename); err != nil {
+	//		c.String(http.StatusBadRequest, fmt.Sprintf("upload file err: %s", err.Error()))
+	//		return
+	//	}
+	//
+	//	dec := decoder.NewDecoder()
+	//
+	//	err = dec.Dec(filename, filename + ".wav")
+	//	if err != nil{
+	//		logrus.Panic(err)
+	//	}
+	//
+	//	text, err  := kaldi.Recognition(filename + ".wav")
+	//
+	//	if err != nil {
+	//		logrus.Print(err)
+	//		c.JSON(200, gin.H{
+	//			"result": "ok",
+	//			"data": "error",
+	//		})
+	//		return
+	//	}
+	//
+	//	c.JSON(200, gin.H{
+	//		"result": "ok",
+	//		"data": text,
+	//	})
+	//	return
+	//})
+	//router.Run(":4080")
 
-	router.POST("/upload", func(c *gin.Context) {
 
-		file, err := c.FormFile("voice")
 
-		logrus.Println(file.Filename)
-		logrus.Println(file.Header)
-		logrus.Println(file.Size)
-
-		if err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("get form err: %s", err.Error()))
-			return
-		}
-
-		filename := filepath.Base(file.Filename)
-		if err := c.SaveUploadedFile(file, filename); err != nil {
-			c.String(http.StatusBadRequest, fmt.Sprintf("upload file err: %s", err.Error()))
-			return
-		}
-
-		dec := decoder.NewDecoder()
-
-		err = dec.Dec(filename, filename + ".wav")
-		if err != nil{
-			logrus.Panic(err)
-		}
-
-		text, err  := kaldi.Recognition(filename + ".wav")
-
-		if err != nil {
-			logrus.Print(err)
-			c.JSON(200, gin.H{
-				"result": "ok",
-				"data": "error",
-			})
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"result": "ok",
-			"data": text,
-		})
-		return
-	})
-	router.Run(":4080")
 }
