@@ -140,7 +140,7 @@ func (p *Process) readDir(dir string)  {
 					atomic.AddInt32(&totalErrors, 1)
 				}
 
-				req, err := http.NewRequest("POST","http://192.168.143.91:5088", bytes.NewBuffer(j))
+				req, err := http.NewRequest("POST","", bytes.NewBuffer(j))
 
 				if err != nil {
 					p.log.Info(err)
