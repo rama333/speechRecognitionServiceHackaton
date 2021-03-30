@@ -23,22 +23,32 @@ type FileRecognition interface {
 	Recognition(file string) (string, error)
 }
 
+type DBStorage interface {
+	AddProcessedFile(file string) (error)
+	CheckFileIsProssed(file string) (prossed bool, err error)
+}
+
 type Process struct {
 	log *logrus.Entry
 	wg *sync.WaitGroup
 	fileRecognition FileRecognition
+	dbStorage DBStorage
 }
 
-var totalFile int32
-var totalErrors int32
-var totalSucces int32
+var (
+totalFile int32
+totalErrors int32
+totalSucces int32
+totalSkipped int32
+)
 
-func New(fileRecognition FileRecognition) (*Process, error)  {
+func New(fileRecognition FileRecognition, dbStorage DBStorage) (*Process, error)  {
 
 	//if err
 	p := &Process{
 		log: logrus.WithField("subsystem", "processing"),
 		fileRecognition: fileRecognition,
+		dbStorage: dbStorage,
 	}
 
 	return p, nil
@@ -46,9 +56,20 @@ func New(fileRecognition FileRecognition) (*Process, error)  {
 
 func (p *Process) Processing()  {
 
-	p.readDir("/home/temp/")
+	defer func() {
+		log := p.log.WithFields(logrus.Fields{
+				"total succes": totalSucces,
+				"total error": totalErrors,
+				"total skipped": totalSkipped,
+			})
+		if totalErrors == 0{
+			log.Info("files processed")
+		} else {
+			log.Warning("files processed with eroors")
+		}
+	}()
 
-	logrus.Info(totalFile)
+	p.readDir("/home/temp/")
 
 }
 
@@ -62,8 +83,18 @@ func (p *Process) readDir(dir string)  {
 
 	for _,f := range files{
 		if !f.IsDir() {
-			//logrus.Info(f.Name())
 			atomic.AddInt32(&totalFile, 1)
+
+			prossed, err := p.dbStorage.CheckFileIsProssed(f.Name())
+
+			if err != nil{
+				p.log.WithError(err).Error("failed to check file")
+			}
+
+			if prossed {
+				atomic.AddInt32(&totalSkipped, 1)
+				continue
+			}
 
 			math, err := regexp.MatchString(".xml", f.Name())
 
@@ -86,11 +117,8 @@ func (p *Process) readDir(dir string)  {
 				var rec entity.Recording
 				xml.Unmarshal(read, &rec)
 
-				//logrus.Infof("%v", rec)
-
 				fileName := strings.Split(f.Name(), ".xml")[0]
 
-				p.log.Info(fileName)
 
 				dec := decoder.NewDecoder()
 
@@ -128,9 +156,19 @@ func (p *Process) readDir(dir string)  {
 				}
 				defer resp.Body.Close()
 
-			}
+				err = p.dbStorage.AddProcessedFile(f.Name())
+				if err != nil {
+					p.log.WithError(err).Error("failed add in db_storage")
+				}
 
+				log := p.log.WithFields(logrus.Fields{
+					"total succes": totalSucces,
+					"total error": totalErrors,
+					"total skipped": totalSkipped,
+				})
 
+				log.Info("file processed")
+				}
 		} else {
 			p.readDir(dir + f.Name() + "/")
 		}

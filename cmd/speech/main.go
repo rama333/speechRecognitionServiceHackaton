@@ -10,10 +10,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
+	bolt "speechRecognitionService/db"
 	"speechRecognitionService/kaldi_go"
 	"speechRecognitionService/processing"
 	pb "speechRecognitionService/proto"
 	"strings"
+	"time"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -120,24 +122,13 @@ func chk(err error) {
 
 func main()  {
 
+	var st time.Time
 
-	//go func() {
-	//	listener, err := net.Listen("tcp", ":5300")
-	//
-	//	if err != nil{
-	//		grpclog.Fatal("fatal %v", err)
-	//	}
-	//
-	//
-	//	opts := []grpc.ServerOption{}
-	//
-	//	grpcServer := grpc.NewServer(opts...)
-	//
-	//	pb.RegisterReverseServer(grpcServer, &server{})
-	//
-	//	grpcServer.Serve(listener)
-	//
-	//}()
+	defer func() {
+		if !st.IsZero() {
+			logrus.Infof("stopped in %s second, exiting", time.Now().Sub(st))
+		}
+	}()
 
 	kaldi := kaldi_go.NewConfig(&kaldi_go.Config{
 		"/home/ubuntu/kaldi/src/online2bin/online2-wav-nnet3-latgen-faster",
@@ -153,8 +144,25 @@ func main()  {
 		"/home/ubuntu/test/kaldi-ru-0.9/exp/tdnn/graph/HCLG.fst",
 	})
 
+	db, err := bolt.NewStrorage()
 
-	proc, err := processing.New(kaldi)
+	if err != nil{
+		logrus.WithError(err).Fatal("failed to create bolt_db_storage")
+	}
+
+	defer func() {
+		err := db.Close()
+
+		if err != nil {
+			logrus.WithError(err).Fatal("failed to close bolt_db_storage")
+		} else{
+			logrus.Info("bolt_db_storage closed")
+		}
+
+	}()
+
+
+	proc, err := processing.New(kaldi, db)
 
 	if err != nil{
 		logrus.Panic(err)
@@ -225,6 +233,5 @@ func main()  {
 	//})
 	//router.Run(":4080")
 
-
-
+	st = time.Now()
 }
