@@ -92,8 +92,7 @@ func (e *Encoder) Recognition(file string) (string, error)  {
 	err := cmd.Run()
 
 
-
-	if err !=nil{
+	if err != nil {
 		logrus.Info(  out.String() + out.String())
 		log.Println(out.String() + stderr.String())
 		return "", err

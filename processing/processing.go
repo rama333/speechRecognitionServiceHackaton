@@ -81,8 +81,13 @@ func (p *Process) readDir(dir string)  {
 		logrus.Info(err)
 	}
 
-	for _,f := range files{
+	for _,f := range files {
+
+
+
 		if !f.IsDir() {
+
+
 			atomic.AddInt32(&totalFile, 1)
 
 			prossed, err := p.dbStorage.CheckFileIsProssed(f.Name())
@@ -126,6 +131,23 @@ func (p *Process) readDir(dir string)  {
 				if err != nil{
 					logrus.Panic(err)
 				}
+
+				wavInfo, err := os.Stat("/home/test/" + fileName + ".wav")
+
+				l := logrus.WithFields(
+					logrus.Fields{
+						"name": wavInfo.Name(),
+						"size":wavInfo.Size(),
+					})
+
+				l.Info()
+
+				// if size file > 30 MiB => coun
+				if wavInfo.Size() >= 30<<20  {
+					atomic.AddInt32(&totalSkipped, 1)
+					continue
+				}
+
 
 				recogn, err := p.fileRecognition.Recognition("/home/test/" + fileName + ".wav")
 
