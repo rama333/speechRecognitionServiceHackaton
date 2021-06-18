@@ -36,10 +36,10 @@ type Process struct {
 }
 
 var (
-totalFile int32
-totalErrors int32
-totalSucces int32
-totalSkipped int32
+	totalFile int32
+	totalErrors int32
+	totalSucces int32
+	totalSkipped int32
 )
 
 func New(fileRecognition FileRecognition, dbStorage DBStorage) (*Process, error)  {
@@ -83,10 +83,7 @@ func (p *Process) readDir(dir string)  {
 
 	for _,f := range files {
 
-
-
 		if !f.IsDir() {
-
 
 			atomic.AddInt32(&totalFile, 1)
 
@@ -123,7 +120,6 @@ func (p *Process) readDir(dir string)  {
 				xml.Unmarshal(read, &rec)
 
 				fileName := strings.Split(f.Name(), ".xml")[0]
-
 
 				dec := decoder.NewDecoder()
 
@@ -162,6 +158,7 @@ func (p *Process) readDir(dir string)  {
 					atomic.AddInt32(&totalErrors, 1)
 				}
 
+				//send request to elasticsearch
 				req, err := http.NewRequest("POST","http://192.168.143.91:5088", bytes.NewBuffer(j))
 
 				if err != nil {
